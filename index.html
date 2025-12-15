@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Digital Clock</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet" />
+
+        <link rel="stylesheet" href="css/style.css" />
+    </head>
+    <body>
+        <!-- 背景レイヤー -->
+        <div id="bgLayer"></div>
+
+        <!-- 時計 -->
+        <div id="clockContainer" class="clock-container">
+            <div class="clock-container-row">
+                <div id="temperature" class="temperature">0℃</div>
+                <div class="line"></div>
+                <div id="date" class="date">0000-00-00</div>
+            </div>
+            <div class="clock-container-row">
+                <div id="clock" class="clock">00:00</div>
+            </div>
+        </div>
+
+        <!-- UI -->
+        <div class="mode-indicator" id="modeLabel">時計調整</div>
+
+        <div class="control-panel">
+            <input id="bgInput" type="file" accept="image/*" />
+            <button id="toggleMode">背景</button>
+        </div>
+
+        <script src="js/main.js"></script>
+    </body>
+</html>
