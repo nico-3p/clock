@@ -1,6 +1,4 @@
-/**
- * 時計と日付の表示更新
- */
+/** 時計と日付の表示更新 */
 class ClockDate {
     /**
      * @param {HTMLElement} clockEl
@@ -51,9 +49,7 @@ class ClockDate {
     }
 }
 
-/**
- * UI自動非表示管理
- */
+/** UI自動非表示管理 */
 class UIAutoHide {
     /**
      * @param {HTMLElement} controlPanel
@@ -96,9 +92,7 @@ class UIAutoHide {
     }
 }
 
-/**
- * モード管理
- */
+/** モード管理 */
 class ModeManager {
     /**
      * @param {UIAutoHide} uiAutoHide
@@ -120,9 +114,7 @@ class ModeManager {
     }
 }
 
-/**
- * 背景画像管理
- */
+/** 背景画像管理 */
 class BackgroundImage {
     /**
      * @param {HTMLInputElement} bgInput
@@ -140,9 +132,7 @@ class BackgroundImage {
     }
 }
 
-/**
- * ドラッグ + ピンチ処理
- */
+/** ドラッグ + ピンチ処理 */
 class TransformController {
     /**
      * @param {HTMLElement} target
@@ -221,9 +211,7 @@ class TransformController {
     }
 }
 
-/**
- * ダブルタップで全画面切替
- */
+/** ダブルタップで全画面切替 */
 class FullscreenController {
     constructor() {
         this.lastTap = 0;
@@ -252,9 +240,7 @@ class FullscreenController {
     }
 }
 
-/**
- * 天気情報管理
- */
+/** 天気情報管理 */
 class WeatherManager {
     constructor() {
         this.lat = null;
@@ -264,20 +250,49 @@ class WeatherManager {
     }
 
     async init() {
-        try {
-            const position = await this.getCurrentPosition();
-            this.ongetCurrentPositionSuccess(position);
-            this.updateWeather();
-        } catch (error) {
-            console.error('位置情報の取得に失敗しました:', error.message);
+        // URLパラメータから座標を取得
+        const searchParams = new URLSearchParams(window.location.search);
+        const params = {};
+        for (const [key, value] of searchParams.entries()) {
+            params[key] = value;
         }
+        if (params.lat && params.lon) {
+            const lat = parseFloat(params.lat);
+            const lon = parseFloat(params.lon);
+
+            if (!isNaN(lat) && !isNaN(lon)) {
+                this.lat = lat;
+                this.lon = lon;
+                localStorage.setItem('weather_lat', this.lat);
+                localStorage.setItem('weather_lon', this.lon);
+            }
+        }
+
+        // 保存された位置情報がなければ現在地を取得
+        if (!this.loadSavedLocation()) {
+            try {
+                const position = await this.getCurrentPosition();
+                this.ongetCurrentPositionSuccess(position);
+            } catch (error) {
+                console.error('位置情報の取得に失敗しました:', error.message);
+                // return;
+            }
+        }
+
+        // 天気情報を取得して表示更新
+        this.updateWeather();
     }
 
     getCurrentPosition() {
         return new Promise((resolve, reject) => {
             navigator.geolocation.getCurrentPosition(
                 (position) => resolve(position),
-                (error) => reject(error)
+                (error) => reject(error),
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0,
+                }
             );
         });
     }
@@ -285,7 +300,21 @@ class WeatherManager {
     ongetCurrentPositionSuccess(position) {
         this.lat = position.coords.latitude;
         this.lon = position.coords.longitude;
-        console.log(`緯度: ${this.lat}, 経度: ${this.lon}`);
+
+        localStorage.setItem('weather_lat', this.lat);
+        localStorage.setItem('weather_lon', this.lon);
+    }
+
+    loadSavedLocation() {
+        const lat = localStorage.getItem('weather_lat');
+        const lon = localStorage.getItem('weather_lon');
+
+        if (lat && lon) {
+            this.lat = Number(lat);
+            this.lon = Number(lon);
+            return true;
+        }
+        return false;
     }
 
     getWeatherAPIUrl() {
@@ -305,7 +334,18 @@ class WeatherManager {
     }
 }
 
+function searchParamsToObject() {
+    const params = new URLSearchParams(window.location.search);
+    const obj = {};
+    for (const [key, value] of params.entries()) {
+        obj[key] = value;
+    }
+    return obj;
+}
+
 async function init() {
+    const instances = [];
+
     // 時計と日付の初期化
     const clockEl = document.getElementById('clock');
     const dateEl = document.getElementById('date');
@@ -338,5 +378,8 @@ async function init() {
     clockDate.onFiveMinuteInterval(async () => {
         await weatherManager.updateWeather();
     });
+
+    instances.push(clockDate, uiAutoHide, modeManager, fullscreenController, weatherManager);
+    window.appInstances = instances;
 }
 window.onload = init;
